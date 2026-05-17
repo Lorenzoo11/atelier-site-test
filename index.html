@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EventSite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav id="navbar">
+    <ul>
+      <li><a href="#hero">Home</a></li>
+      <li><a href="#eventi">Eventi</a></li>
+      <li><a href="#gallery">Gallery</a></li>
+      <li><a href="#contatti">Contatti</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div id="hero-video-container"></div>
+    <div class="hero-overlay"></div>
+
+    <div class="hero-content">
+      <!-- Logo immagine (PNG/SVG del collettivo) -->
+      <img id="hero-logo-img" class="hero-logo-img" src="" alt=""/>
+      <!-- Nome testuale sotto il logo -->
+      <!-- <div id="site-logo"></div> -->
+      <p class="hero-tagline" id="site-tagline"></p>
+    </div>
+
+    <div class="next-event-hero" id="hero-next-event">
+      <p class="label">Prossimo evento</p>
+      <div class="event-name" id="next-name"></div>
+      <div class="event-meta" id="next-meta"></div>
+      <div class="countdown" id="countdown">
+        <div class="countdown-unit"><span class="num" id="cd-days">00</span><span class="lbl">giorni</span></div>
+        <div class="countdown-sep">:</div>
+        <div class="countdown-unit"><span class="num" id="cd-hours">00</span><span class="lbl">ore</span></div>
+        <div class="countdown-sep">:</div>
+        <div class="countdown-unit"><span class="num" id="cd-mins">00</span><span class="lbl">minuti</span></div>
+        <div class="countdown-sep">:</div>
+        <div class="countdown-unit"><span class="num" id="cd-secs">00</span><span class="lbl">secondi</span></div>
+      </div>
+      <a href="#" id="hero-ticket-btn" class="hero-cta">Acquista biglietti</a>
+    </div>
+
+    <div class="scroll-indicator">
+      <span>Scorri</span>
+      <svg width="16" height="20" viewBox="0 0 16 20" fill="none" stroke-width="1.5">
+        <path d="M8 2v14M2 12l6 6 6-6"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- PROSSIMI EVENTI -->
+  <section id="eventi">
+    <div class="reveal">
+      <p class="section-label">In programma</p>
+      <h2 class="section-title">Prossimi<br>eventi</h2>
+      <span class="red-line"></span>
+    </div>
+    <div class="eventi-grid reveal" id="eventi-grid"></div>
+  </section>
+
+  <!-- GALLERY -->
+  <section id="gallery">
+    <div class="reveal">
+      <p class="section-label">Archivio</p>
+      <h2 class="section-title">Gallery</h2>
+      <span class="red-line"></span>
+    </div>
+    <div class="gallery-grid reveal" id="gallery-grid"></div>
+    <div class="gallery-more reveal" hidden>
+      <a href="#" id="gallery-archive-link">Tutti gli eventi passati →</a>
+    </div>
+  </section>
+
+  <!-- CONTATTI -->
+  <section id="contatti">
+    <div class="reveal">
+      <p class="section-label">Get in touch</p>
+      <h2 class="section-title">Contatti</h2>
+      <span class="red-line"></span>
+    </div>
+    <div class="contatti-inner">
+      <div class="contatti-info reveal" id="contatti-info"></div>
+      <form class="contact-form reveal" id="contact-form" onsubmit="handleForm(event)">
+        <input type="text"  placeholder="Nome"     required/>
+        <input type="email" placeholder="Email"    required/>
+        <textarea rows="5"  placeholder="Messaggio"></textarea>
+        <button type="submit">Invia messaggio</button>
+        <p id="form-msg" style="font-size:0.8rem;display:none;"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo" id="footer-logo"></div>
+    <ul class="footer-links">
+      <li><a href="#hero">Home</a></li>
+      <li><a href="#eventi">Eventi</a></li>
+      <li><a href="#gallery">Gallery</a></li>
+      <li><a href="#contatti">Contatti</a></li>
+    </ul>
+    <p class="footer-copy" id="footer-copy"></p>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
