@@ -77,20 +77,54 @@ function buildVideo(CONFIG) {
 
   function createVideo(src) {
     const v = document.createElement('video');
-    v.src         = src;
     v.autoplay    = true;
     v.muted       = true;
     v.playsInline = true;
-    v.style.cssText = 'width:100%;height:100%;object-fit:cover;opacity:0.35;';
+    v.loop        = false;
+    v.preload     = 'auto';
+    v.style.cssText = 'width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.8s;position:absolute;inset:0;';
+
+    // Aggiunge WebM come source primaria (più leggero), MP4 come fallback
+    const webmSrc = src.replace(/\.mp4$/i, '.webm');
+    const srcWebm = document.createElement('source');
+    srcWebm.src  = webmSrc;
+    srcWebm.type = 'video/webm';
+
+    const srcMp4 = document.createElement('source');
+    srcMp4.src  = src;
+    srcMp4.type = 'video/mp4';
+
+    v.appendChild(srcWebm);
+    v.appendChild(srcMp4);
+
+    // Fade in appena può riprodurre
+    v.addEventListener('canplay', () => {
+      v.style.opacity = '0.35';
+    });
+
+    // Passa al video successivo alla fine
     v.addEventListener('ended', () => {
       current = (current + 1) % videos.length;
       container.innerHTML = '';
       container.appendChild(createVideo(videos[current]));
     });
+
     return v;
   }
 
+  // Precarica il video successivo in background
+  function preloadNext(idx) {
+    if (videos.length <= 1) return;
+    const next = (idx + 1) % videos.length;
+    const link = document.createElement('link');
+    link.rel  = 'preload';
+    link.as   = 'video';
+    link.href = videos[next].replace(/\.mp4$/i, '.webm');
+    document.head.appendChild(link);
+  }
+
   container.appendChild(createVideo(videos[0]));
+  preloadNext(0);
 }
 
 
@@ -107,44 +141,20 @@ function buildHeroEvent(CONFIG) {
   }
 
   /* Primo evento non sold-out più vicino nel tempo */
-  /*
   const future = [...events]
     .filter(e => !e.soldOut && new Date(e.data) > new Date())
-    .sort((a, b) => new Date(a.data) - new Date(b.data));*/
-
-  const future = [...events]
-    .filter(e => (e.nome === CONFIG.eventoHomePage) )
+    .sort((a, b) => new Date(a.data) - new Date(b.data));
 
   const ev = future[0] || events[0];
+  const d  = new Date(ev.data);
 
-  // parse data senza ora per evitare shift timezone
-  const [y, m, dd] = ev.data.split('-').map(Number);
-  const d = new Date(y, m - 1, dd);
-
-  // orario formattato
-  let orario = ev.oraInizio || '';
-  if (ev.oraFine) orario += ' - ' + ev.oraFine;
-
-  const dataStr  = ev.nascondData
-    ? '???'
-    : d.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' }) + (orario ? ' · ' + orario : '');
-  const luogoStr = ev.nascondLuogo
-    ? '???'
-    : ev.venue + (ev.city ? ' · ' + ev.city : '');
-
-  if(ev.nascondLuogo === true) {
-    document.getElementById('next-name').textContent = "???"
-  } else {
-    document.getElementById('next-name').textContent = ev.nome;
-  }
-  
-  document.getElementById('next-meta').textContent = dataStr + ' · ' + luogoStr;
+  document.getElementById('next-name').textContent = ev.nome;
+  document.getElementById('next-meta').textContent =
+    d.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' }) +
+    ' · ' + ev.venue;
 
   const btn = document.getElementById('hero-ticket-btn');
-  if(ev.nascondLuogo === true) {
-    btn.style.display = 'none';
-  }
-  else if (ev.freeEntry) {
+  if (ev.freeEntry) {
     btn.textContent           = 'Ingresso libero';
     btn.style.borderColor     = 'var(--white)';
     btn.style.pointerEvents   = 'none';
@@ -157,35 +167,26 @@ function buildHeroEvent(CONFIG) {
     btn.href = ev.ticketLink;
   }
 
-  /* Countdown — nascosto se nascondData è true */
-  if (ev.nascondData) {
-    ['cd-days','cd-hours','cd-mins','cd-secs'].forEach(id => {
-      document.getElementById(id).textContent = '??';
-    });
-    document.querySelectorAll('.countdown-unit .lbl').forEach(el => el.style.visibility = 'hidden');
-  } else {
-    const oraStr = ev.oraInizio ? ev.oraInizio : '00:00';
-    const targetDate = new Date(y, m - 1, dd, ...oraStr.split(':').map(Number));
-    const target = targetDate.getTime();
-    function pad(n) { return String(n).padStart(2, '0'); }
+  /* Countdown */
+  const target = d.getTime();
+  function pad(n) { return String(n).padStart(2, '0'); }
 
-    function tick() {
-      const diff = target - Date.now();
-      if (diff <= 0) {
-        ['cd-days','cd-hours','cd-mins','cd-secs'].forEach(id => {
-          document.getElementById(id).textContent = '00';
-        });
-        return;
-      }
-      document.getElementById('cd-days').textContent  = pad(Math.floor(diff / 86400000));
-      document.getElementById('cd-hours').textContent = pad(Math.floor((diff % 86400000) / 3600000));
-      document.getElementById('cd-mins').textContent  = pad(Math.floor((diff % 3600000) / 60000));
-      document.getElementById('cd-secs').textContent  = pad(Math.floor((diff % 60000) / 1000));
+  function tick() {
+    const diff = target - Date.now();
+    if (diff <= 0) {
+      ['cd-days','cd-hours','cd-mins','cd-secs'].forEach(id => {
+        document.getElementById(id).textContent = '00';
+      });
+      return;
     }
-
-    tick();
-    setInterval(tick, 1000);
+    document.getElementById('cd-days').textContent  = pad(Math.floor(diff / 86400000));
+    document.getElementById('cd-hours').textContent = pad(Math.floor((diff % 86400000) / 3600000));
+    document.getElementById('cd-mins').textContent  = pad(Math.floor((diff % 3600000) / 60000));
+    document.getElementById('cd-secs').textContent  = pad(Math.floor((diff % 60000) / 1000));
   }
+
+  tick();
+  setInterval(tick, 1000);
 }
 
 
@@ -196,36 +197,23 @@ function buildEventiGrid(CONFIG) {
   const grid = document.getElementById('eventi-grid');
 
   CONFIG.prossimiEventi.forEach(ev => {
-    // data è ora solo "YYYY-MM-DD", parse senza ora per evitare shift timezone
-    const [year, month_n, day_n] = ev.data.split('-').map(Number);
-    const d = new Date(year, month_n - 1, day_n);
+    const d     = new Date(ev.data);
+    const day   = d.toLocaleDateString('it-IT', { day: '2-digit' });
+    const month = d.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+    const hour  = d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
 
-    const day       = String(day_n).padStart(2, '0');
-    const monthStr  = d.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
-
-    // Orario: riga separata con inizio → fine (o solo inizio)
-    let orario = ev.oraInizio || '';
-    if (ev.oraFine) orario += ' - ' + ev.oraFine;
-
-    const dayDisplay   = ev.nascondData  ? '??' : day;
-    const monthDisplay = ev.nascondData  ? 'Data da rivelare' : monthStr;
-    const timeDisplay  = ev.nascondData  ? '??-??' : (orario ? `<div class="ec-time">${orario}</div>` : '');
-    const venueDisplay = ev.nascondLuogo ? 'Luogo da rivelare' : ev.venue;
-    const cityDisplay  = ev.nascondLuogo ? '\u00A0' : ev.city;
-    let badge   = '';
+    /* Badge e bottone in base allo stato */
+    let badge  = '';
     let btnHTML = '';
 
     if (ev.soldOut) {
-      //badge   = '<span class="ec-badge ec-badge--soldout">Sold Out</span>';
-      btnHTML = '<span class="ec-btn--disabled">Sold Out</span>';
+      badge   = '<span class="ec-badge ec-badge--soldout">Sold Out</span>';
+      btnHTML = '<span class="ec-btn ec-btn--disabled">Sold Out</span>';
     } else if (ev.freeEntry) {
-      //badge   = '<span class="ec-badge ec-badge--free">Ingresso libero</span>';
-      btnHTML = '<span class="ec-btn--free">Ingresso libero</span>';
-  } else if (ev.ticketLink === '#') {
-      //badge   = '<span class="ec-badge ec-badge--free">Ingresso libero</span>';
-      btnHTML = '<span class="ec-btn--disabled">Biglietti non disponibili</span>';
+      badge   = '<span class="ec-badge ec-badge--free">Ingresso libero</span>';
+      btnHTML = '<span class="ec-btn ec-btn--free">Ingresso libero</span>';
     } else {
-      btnHTML = `<a href="${ev.ticketLink}" class="ec-btn">Biglietti</a>`;
+      btnHTML = `<a href="${ev.ticketLink}" class="ec-btn">Biglietti →</a>`;
     }
 
     const card = document.createElement('div');
@@ -233,15 +221,13 @@ function buildEventiGrid(CONFIG) {
     card.innerHTML = `
       <div class="ec-top">
         <div>
-          <div class="ec-date">${dayDisplay}</div>
-          <div class="ec-month">${monthDisplay}</div>
-          ${timeDisplay}
+          <div class="ec-date">${day}</div>
+          <div class="ec-month">${month} · ${hour}</div>
         </div>
         ${badge}
       </div>
       <div class="ec-name">${ev.nome}</div>
-      <div class="ec-venue">${venueDisplay}</div>
-      <div class="ec-city">${cityDisplay}</div>
+      <div class="ec-venue">${ev.venue}</div>
       ${btnHTML}`;
 
     grid.appendChild(card);
@@ -269,7 +255,6 @@ function buildGallery(CONFIG) {
     el.innerHTML = `
       ${wrapOpen}
         ${media}
-        <div class="gallery-text">${item.nome}</div>
         <div class="gallery-overlay">
           <div class="go-name">${item.nome}</div>
           <div class="go-date">${item.data}</div>
