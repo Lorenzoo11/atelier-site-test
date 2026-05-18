@@ -1,6 +1,11 @@
 # ============================================================
 # netlify.toml — configurazione Netlify per EventSite
+# Sito HTML statico: nessun build command necessario
 # ============================================================
+
+[build]
+  command = ""
+  publish = "."
 
 [[headers]]
   for = "*.mp4"

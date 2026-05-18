@@ -141,20 +141,44 @@ function buildHeroEvent(CONFIG) {
   }
 
   /* Primo evento non sold-out più vicino nel tempo */
+  /*
   const future = [...events]
     .filter(e => !e.soldOut && new Date(e.data) > new Date())
-    .sort((a, b) => new Date(a.data) - new Date(b.data));
+    .sort((a, b) => new Date(a.data) - new Date(b.data));*/
+
+  const future = [...events]
+    .filter(e => (e.nome === CONFIG.eventoHomePage) )
 
   const ev = future[0] || events[0];
-  const d  = new Date(ev.data);
 
-  document.getElementById('next-name').textContent = ev.nome;
-  document.getElementById('next-meta').textContent =
-    d.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' }) +
-    ' · ' + ev.venue;
+  // parse data senza ora per evitare shift timezone
+  const [y, m, dd] = ev.data.split('-').map(Number);
+  const d = new Date(y, m - 1, dd);
+
+  // orario formattato
+  let orario = ev.oraInizio || '';
+  if (ev.oraFine) orario += ' - ' + ev.oraFine;
+
+  const dataStr  = ev.nascondData
+    ? '???'
+    : d.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' }) + (orario ? ' · ' + orario : '');
+  const luogoStr = ev.nascondLuogo
+    ? '???'
+    : ev.venue + (ev.city ? ' · ' + ev.city : '');
+
+  if(ev.nascondLuogo === true) {
+    document.getElementById('next-name').textContent = "???"
+  } else {
+    document.getElementById('next-name').textContent = ev.nome;
+  }
+  
+  document.getElementById('next-meta').textContent = dataStr + ' · ' + luogoStr;
 
   const btn = document.getElementById('hero-ticket-btn');
-  if (ev.freeEntry) {
+  if(ev.nascondLuogo === true) {
+    btn.style.display = 'none';
+  }
+  else if (ev.freeEntry) {
     btn.textContent           = 'Ingresso libero';
     btn.style.borderColor     = 'var(--white)';
     btn.style.pointerEvents   = 'none';
@@ -167,26 +191,35 @@ function buildHeroEvent(CONFIG) {
     btn.href = ev.ticketLink;
   }
 
-  /* Countdown */
-  const target = d.getTime();
-  function pad(n) { return String(n).padStart(2, '0'); }
+  /* Countdown — nascosto se nascondData è true */
+  if (ev.nascondData) {
+    ['cd-days','cd-hours','cd-mins','cd-secs'].forEach(id => {
+      document.getElementById(id).textContent = '??';
+    });
+    document.querySelectorAll('.countdown-unit .lbl').forEach(el => el.style.visibility = 'hidden');
+  } else {
+    const oraStr = ev.oraInizio ? ev.oraInizio : '00:00';
+    const targetDate = new Date(y, m - 1, dd, ...oraStr.split(':').map(Number));
+    const target = targetDate.getTime();
+    function pad(n) { return String(n).padStart(2, '0'); }
 
-  function tick() {
-    const diff = target - Date.now();
-    if (diff <= 0) {
-      ['cd-days','cd-hours','cd-mins','cd-secs'].forEach(id => {
-        document.getElementById(id).textContent = '00';
-      });
-      return;
+    function tick() {
+      const diff = target - Date.now();
+      if (diff <= 0) {
+        ['cd-days','cd-hours','cd-mins','cd-secs'].forEach(id => {
+          document.getElementById(id).textContent = '00';
+        });
+        return;
+      }
+      document.getElementById('cd-days').textContent  = pad(Math.floor(diff / 86400000));
+      document.getElementById('cd-hours').textContent = pad(Math.floor((diff % 86400000) / 3600000));
+      document.getElementById('cd-mins').textContent  = pad(Math.floor((diff % 3600000) / 60000));
+      document.getElementById('cd-secs').textContent  = pad(Math.floor((diff % 60000) / 1000));
     }
-    document.getElementById('cd-days').textContent  = pad(Math.floor(diff / 86400000));
-    document.getElementById('cd-hours').textContent = pad(Math.floor((diff % 86400000) / 3600000));
-    document.getElementById('cd-mins').textContent  = pad(Math.floor((diff % 3600000) / 60000));
-    document.getElementById('cd-secs').textContent  = pad(Math.floor((diff % 60000) / 1000));
-  }
 
-  tick();
-  setInterval(tick, 1000);
+    tick();
+    setInterval(tick, 1000);
+  }
 }
 
 
@@ -197,23 +230,36 @@ function buildEventiGrid(CONFIG) {
   const grid = document.getElementById('eventi-grid');
 
   CONFIG.prossimiEventi.forEach(ev => {
-    const d     = new Date(ev.data);
-    const day   = d.toLocaleDateString('it-IT', { day: '2-digit' });
-    const month = d.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
-    const hour  = d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    // data è ora solo "YYYY-MM-DD", parse senza ora per evitare shift timezone
+    const [year, month_n, day_n] = ev.data.split('-').map(Number);
+    const d = new Date(year, month_n - 1, day_n);
 
-    /* Badge e bottone in base allo stato */
-    let badge  = '';
+    const day       = String(day_n).padStart(2, '0');
+    const monthStr  = d.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+
+    // Orario: riga separata con inizio → fine (o solo inizio)
+    let orario = ev.oraInizio || '';
+    if (ev.oraFine) orario += ' - ' + ev.oraFine;
+
+    const dayDisplay   = ev.nascondData  ? '??' : day;
+    const monthDisplay = ev.nascondData  ? 'Data da rivelare' : monthStr;
+    const timeDisplay  = ev.nascondData  ? '??-??' : (orario ? `<div class="ec-time">${orario}</div>` : '');
+    const venueDisplay = ev.nascondLuogo ? 'Luogo da rivelare' : ev.venue;
+    const cityDisplay  = ev.nascondLuogo ? '\u00A0' : ev.city;
+    let badge   = '';
     let btnHTML = '';
 
     if (ev.soldOut) {
-      badge   = '<span class="ec-badge ec-badge--soldout">Sold Out</span>';
-      btnHTML = '<span class="ec-btn ec-btn--disabled">Sold Out</span>';
+      //badge   = '<span class="ec-badge ec-badge--soldout">Sold Out</span>';
+      btnHTML = '<span class="ec-btn--disabled">Sold Out</span>';
     } else if (ev.freeEntry) {
-      badge   = '<span class="ec-badge ec-badge--free">Ingresso libero</span>';
-      btnHTML = '<span class="ec-btn ec-btn--free">Ingresso libero</span>';
+      //badge   = '<span class="ec-badge ec-badge--free">Ingresso libero</span>';
+      btnHTML = '<span class="ec-btn--free">Ingresso libero</span>';
+  } else if (ev.ticketLink === '#') {
+      //badge   = '<span class="ec-badge ec-badge--free">Ingresso libero</span>';
+      btnHTML = '<span class="ec-btn--disabled">Biglietti non disponibili</span>';
     } else {
-      btnHTML = `<a href="${ev.ticketLink}" class="ec-btn">Biglietti →</a>`;
+      btnHTML = `<a href="${ev.ticketLink}" class="ec-btn">Biglietti</a>`;
     }
 
     const card = document.createElement('div');
@@ -221,13 +267,15 @@ function buildEventiGrid(CONFIG) {
     card.innerHTML = `
       <div class="ec-top">
         <div>
-          <div class="ec-date">${day}</div>
-          <div class="ec-month">${month} · ${hour}</div>
+          <div class="ec-date">${dayDisplay}</div>
+          <div class="ec-month">${monthDisplay}</div>
+          ${timeDisplay}
         </div>
         ${badge}
       </div>
       <div class="ec-name">${ev.nome}</div>
-      <div class="ec-venue">${ev.venue}</div>
+      <div class="ec-venue">${venueDisplay}</div>
+      <div class="ec-city">${cityDisplay}</div>
       ${btnHTML}`;
 
     grid.appendChild(card);
@@ -255,6 +303,7 @@ function buildGallery(CONFIG) {
     el.innerHTML = `
       ${wrapOpen}
         ${media}
+        <div class="gallery-text">${item.nome}</div>
         <div class="gallery-overlay">
           <div class="go-name">${item.nome}</div>
           <div class="go-date">${item.data}</div>
@@ -348,13 +397,38 @@ function initReveal() {
 
 
 /* ============================================================
-   FORM CONTATTI
+   FORM CONTATTI — invia tramite Netlify Forms
    ============================================================ */
 function handleForm(e) {
   e.preventDefault();
-  const msg = document.getElementById('form-msg');
-  msg.style.display = 'block';
-  msg.style.color   = 'var(--red)';
-  msg.textContent   = 'Messaggio inviato! Ti risponderemo presto.';
-  e.target.reset();
+  const form = e.target;
+  const msg  = document.getElementById('form-msg');
+  const btn  = form.querySelector('button[type="submit"]');
+
+  btn.disabled     = true;
+  btn.textContent  = 'Invio in corso...';
+  msg.style.display = 'none';
+
+  const data = new FormData(form);
+
+  fetch('/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams(data).toString()
+  })
+  .then(() => {
+    msg.style.display = 'block';
+    msg.style.color   = 'var(--red)';
+    msg.textContent   = 'Messaggio inviato! Ti risponderemo presto.';
+    form.reset();
+    btn.disabled    = false;
+    btn.textContent = 'Invia messaggio';
+  })
+  .catch(() => {
+    msg.style.display = 'block';
+    msg.style.color   = 'var(--muted)';
+    msg.textContent   = 'Errore nell'invio. Scrivici direttamente via email.';
+    btn.disabled    = false;
+    btn.textContent = 'Invia messaggio';
+  });
 }

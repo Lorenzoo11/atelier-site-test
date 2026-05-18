@@ -32,3 +32,6 @@ npm-debug.log*
 # Development
 *.test.js
 .env.development
+
+# Local Netlify folder
+.netlify

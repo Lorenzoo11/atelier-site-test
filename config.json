@@ -10,7 +10,10 @@
   "heroVideos": [
     "video/drone1.mp4",
     "video/torchio1.mp4",
-    "video/castello1.mp4"
+    "video/castello1.mp4",
+    "video/drone2.mp4",
+    "video/torchio2.mp4",
+    "video/torchio3.mp4"
   ],
 
   "eventoHomePage" : "Game of Lands",
@@ -33,7 +36,7 @@
       "nome":       "Atelier Ninfeo",
       "data":       "2026-06-19",
       "venue":      "Via Pier Paolo Pasolini",
-      "city":      "Genazzano, 00030",
+      "city":       "Genazzano, 00030",
       "oraInizio":  "18:00",
       "oraFine":    "02:30",
       "ticketLink": "#",
