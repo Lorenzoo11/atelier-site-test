@@ -29,8 +29,8 @@
       "ticketLink": "#",
       "freeEntry":  true,
       "soldOut":    false,
-      "nascondData":   true,
-      "nascondLuogo":  true
+      "nascondData":   false,
+      "nascondLuogo":  false
     },
     {
       "nome":       "Atelier Ninfeo",

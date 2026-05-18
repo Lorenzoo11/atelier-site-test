@@ -73,50 +73,69 @@ function buildVideo(CONFIG) {
   }
 
   let current = 0;
-  const videos = CONFIG.heroVideos;
-
-  // Su mobile riduci la playlist a max 2 video per alleggerire
-  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-  const playlist  = isMobile ? videos.slice(0, 5) : videos;
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const videos   = CONFIG.heroVideos;
 
   function createVideo(src) {
     const v = document.createElement('video');
+
+    // Tutti gli attributi necessari per autoplay mobile
     v.setAttribute('autoplay', '');
     v.setAttribute('muted', '');
     v.setAttribute('playsinline', '');
     v.setAttribute('webkit-playsinline', '');
-    v.muted    = true;   // proprietà JS oltre all'attributo, necessaria su iOS
-    v.loop     = false;
-    v.preload  = isMobile ? 'metadata' : 'auto';
+    v.muted   = true;  // necessario anche come proprieta JS su iOS
+    v.loop    = false;
+    v.preload = isMobile ? 'metadata' : 'auto';
     v.style.cssText = 'width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.8s;position:absolute;inset:0;';
 
-    // Solo MP4 — finché non hai i .webm evita il tentativo WebM che blocca mobile
+    // Solo MP4 — nessun tentativo WebM che blocca iOS
     const srcMp4  = document.createElement('source');
     srcMp4.src    = src;
     srcMp4.type   = 'video/mp4';
     v.appendChild(srcMp4);
 
-    // Fade in appena può riprodurre
     v.addEventListener('canplay', () => {
       v.style.opacity = '0.35';
-      // Forza il play (necessario su alcuni browser mobile)
       v.play().catch(() => {});
     });
 
-    // Passa al video successivo alla fine
     v.addEventListener('ended', () => {
-      current = (current + 1) % playlist.length;
+      current = (current + 1) % videos.length;
       container.innerHTML = '';
-      container.appendChild(createVideo(playlist[current]));
+      const next = createVideo(videos[current]);
+      container.appendChild(next);
+      next.play().catch(() => {});
     });
 
     return v;
   }
 
-  const firstVideo = createVideo(playlist[0]);
-  container.appendChild(firstVideo);
-  // Forza play dopo append (workaround Safari iOS)
-  firstVideo.play().catch(() => {});
+  // Monta il primo video
+  const first = createVideo(videos[0]);
+  container.appendChild(first);
+  first.play().catch(() => {});
+
+  // iOS Safari/Chrome: al primo tocco forza il play se il video e fermo
+  let unlocked = false;
+  function unlockOnTouch() {
+    if (unlocked) return;
+    unlocked = true;
+    const active = container.querySelector('video');
+    if (active && active.paused) active.play().catch(() => {});
+    ['touchstart', 'click'].forEach(e => document.removeEventListener(e, unlockOnTouch));
+  }
+  ['touchstart', 'click'].forEach(e => {
+    document.addEventListener(e, unlockOnTouch, { passive: true });
+  });
+
+  // Riprende se la pagina torna in foreground
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      const active = container.querySelector('video');
+      if (active && active.paused) active.play().catch(() => {});
+    }
+  });
 }
 
 
