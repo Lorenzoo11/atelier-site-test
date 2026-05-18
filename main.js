@@ -75,56 +75,48 @@ function buildVideo(CONFIG) {
   let current = 0;
   const videos = CONFIG.heroVideos;
 
+  // Su mobile riduci la playlist a max 2 video per alleggerire
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  const playlist  = isMobile ? videos.slice(0, 5) : videos;
+
   function createVideo(src) {
     const v = document.createElement('video');
-    v.autoplay    = true;
-    v.muted       = true;
-    v.playsInline = true;
-    v.loop        = false;
-    v.preload     = 'auto';
+    v.setAttribute('autoplay', '');
+    v.setAttribute('muted', '');
+    v.setAttribute('playsinline', '');
+    v.setAttribute('webkit-playsinline', '');
+    v.muted    = true;   // proprietà JS oltre all'attributo, necessaria su iOS
+    v.loop     = false;
+    v.preload  = isMobile ? 'metadata' : 'auto';
     v.style.cssText = 'width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.8s;position:absolute;inset:0;';
 
-    // Aggiunge WebM come source primaria (più leggero), MP4 come fallback
-    const webmSrc = src.replace(/\.mp4$/i, '.webm');
-    const srcWebm = document.createElement('source');
-    srcWebm.src  = webmSrc;
-    srcWebm.type = 'video/webm';
-
-    const srcMp4 = document.createElement('source');
-    srcMp4.src  = src;
-    srcMp4.type = 'video/mp4';
-
-    v.appendChild(srcWebm);
+    // Solo MP4 — finché non hai i .webm evita il tentativo WebM che blocca mobile
+    const srcMp4  = document.createElement('source');
+    srcMp4.src    = src;
+    srcMp4.type   = 'video/mp4';
     v.appendChild(srcMp4);
 
     // Fade in appena può riprodurre
     v.addEventListener('canplay', () => {
       v.style.opacity = '0.35';
+      // Forza il play (necessario su alcuni browser mobile)
+      v.play().catch(() => {});
     });
 
     // Passa al video successivo alla fine
     v.addEventListener('ended', () => {
-      current = (current + 1) % videos.length;
+      current = (current + 1) % playlist.length;
       container.innerHTML = '';
-      container.appendChild(createVideo(videos[current]));
+      container.appendChild(createVideo(playlist[current]));
     });
 
     return v;
   }
 
-  // Precarica il video successivo in background
-  function preloadNext(idx) {
-    if (videos.length <= 1) return;
-    const next = (idx + 1) % videos.length;
-    const link = document.createElement('link');
-    link.rel  = 'preload';
-    link.as   = 'video';
-    link.href = videos[next].replace(/\.mp4$/i, '.webm');
-    document.head.appendChild(link);
-  }
-
-  container.appendChild(createVideo(videos[0]));
-  preloadNext(0);
+  const firstVideo = createVideo(playlist[0]);
+  container.appendChild(firstVideo);
+  // Forza play dopo append (workaround Safari iOS)
+  firstVideo.play().catch(() => {});
 }
 
 
@@ -397,36 +389,13 @@ function initReveal() {
 
 
 /* ============================================================
-   FORM CONTATTI — invia tramite Netlify Forms
+   FORM CONTATTI
    ============================================================ */
 function handleForm(e) {
   e.preventDefault();
-  const form = e.target;
-  const msg  = document.getElementById('form-msg');
-  const btn  = form.querySelector("button[type='submit']");
-
-  btn.disabled    = true;
-  btn.textContent = "Invio in corso...";
-  msg.style.display = "none";
-
-  fetch("/", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams(new FormData(form)).toString()
-  })
-  .then(() => {
-    msg.style.display = "block";
-    msg.style.color   = "var(--red)";
-    msg.textContent   = "Messaggio inviato! Ti risponderemo presto.";
-    form.reset();
-    btn.disabled    = false;
-    btn.textContent = "Invia messaggio";
-  })
-  .catch(() => {
-    msg.style.display = "block";
-    msg.style.color   = "var(--muted)";
-    msg.textContent   = "Errore di rete. Scrivici direttamente via email.";
-    btn.disabled    = false;
-    btn.textContent = "Invia messaggio";
-  });
+  const msg = document.getElementById('form-msg');
+  msg.style.display = 'block';
+  msg.style.color   = 'var(--red)';
+  msg.textContent   = 'Messaggio inviato! Ti risponderemo presto.';
+  e.target.reset();
 }

@@ -61,8 +61,9 @@
   ],
 
   "gallery": [
+    { "nome": "Il Torchio pt.2",  "data": "16 Maggio 2026",    "img": "img/torchio2.jpg", "link": "https://drive.google.com/drive/folders/1COddEGnXDGSZ9_HlMvejpxlT2tA9cyjh?usp=sharing" },
     { "nome": "Donna Vittori",  "data": "1 Maggio 2026",    "img": "img/donna_vittori.png", "link": "https://drive.google.com/drive/folders/1o_TplK-4Fs-tZTPGoI-EmEPjzJJWCQdh" },
-    { "nome": "Valle Giulia PT.2",         "data": "31 Marzo 2026",  "img": "img/valle_giulia_2.png", "link": "https://drive.google.com/drive/folders/1TQ4ErmvU1YjsTnHTvf5NGsf5TwX2XDtN#" },
+    { "nome": "Valle Giulia pt.2",         "data": "31 Marzo 2026",  "img": "img/valle_giulia_2.png", "link": "https://drive.google.com/drive/folders/1TQ4ErmvU1YjsTnHTvf5NGsf5TwX2XDtN#" },
     { "nome": "Il Torchio",     "data": "13 Marzo 2026", "img": "img/torchio.png", "link": "https://drive.google.com/drive/folders/1pGdR31OO1Eg4UeJerI9L_y0oyIbRIdPB" },
     { "nome": "Castello Colonna",   "data": "23 Dicembre 2025",  "img": "img/castello.png", "link": "https://drive.google.com/drive/folders/1SNKUs69XyvgLUOuJ-gUOD36xk3MCuh4b" },
     { "nome": "Valle Giulia",         "data": "22 ottobre 2025",   "img": "img/valle_giulia.png", "link": "https://drive.google.com/drive/folders/1ZzAxiVjUhDt1fxVtuGQnloGQvQIKecXY" },

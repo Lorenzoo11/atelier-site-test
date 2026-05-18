@@ -1,6 +1,8 @@
 per avviare sito locale: python -m http.server
 
-per caricare un video va convertito con 2 script
+per invio mail attiva form detection, poi confiura email a cui inviare i messaggi
+
+per caricare un video va convertito con 2 script:
 
 ffmpeg -i drone1.mp4 -vcodec libx264 -crf 28 -preset slow -vf "scale=1280:-2" -an -movflags +faststart drone1_opt.mp4
 
