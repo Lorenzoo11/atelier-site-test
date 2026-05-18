@@ -427,7 +427,7 @@ function handleForm(e) {
   .catch(() => {
     msg.style.display = 'block';
     msg.style.color   = 'var(--muted)';
-    msg.textContent   = 'Errore nell'invio. Scrivici direttamente via email.';
+    msg.textContent   = 'Errore nell invio. Scrivici direttamente via email.';
     btn.disabled    = false;
     btn.textContent = 'Invia messaggio';
   });
