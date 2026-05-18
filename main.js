@@ -405,16 +405,14 @@ function handleForm(e) {
   const msg  = document.getElementById('form-msg');
   const btn  = form.querySelector('button[type="submit"]');
 
-  btn.disabled     = true;
-  btn.textContent  = 'Invio in corso...';
+  btn.disabled    = true;
+  btn.textContent = 'Invio in corso...';
   msg.style.display = 'none';
-
-  const data = new FormData(form);
 
   fetch('/', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams(data).toString()
+    body: new URLSearchParams(new FormData(form)).toString()
   })
   .then(() => {
     msg.style.display = 'block';
@@ -427,7 +425,7 @@ function handleForm(e) {
   .catch(() => {
     msg.style.display = 'block';
     msg.style.color   = 'var(--muted)';
-    msg.textContent   = 'Errore nell invio. Scrivici direttamente via email.';
+    msg.textContent   = "Errore nell'invio. Scrivici direttamente via email.";
     btn.disabled    = false;
     btn.textContent = 'Invia messaggio';
   });
