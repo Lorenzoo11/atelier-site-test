@@ -72,55 +72,49 @@ function buildVideo(CONFIG) {
     return;
   }
 
-  let current = 0;
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  const videos   = CONFIG.heroVideos;
+  const isIOS  = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const videos = CONFIG.heroVideos;
+  let current  = 0;
 
-  function createVideo(src) {
+  function createVideo(src, useLoop) {
     const v = document.createElement('video');
-
-    // Tutti gli attributi necessari per autoplay mobile
     v.setAttribute('autoplay', '');
     v.setAttribute('muted', '');
     v.setAttribute('playsinline', '');
     v.setAttribute('webkit-playsinline', '');
-    v.muted   = true;  // necessario anche come proprieta JS su iOS
-    v.loop    = false;
-    v.preload = isMobile ? 'metadata' : 'auto';
+    v.setAttribute('preload', 'auto');
+    if (useLoop) v.setAttribute('loop', '');
+    v.muted = true;
     v.style.cssText = 'width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.8s;position:absolute;inset:0;';
 
-    // Solo MP4 — nessun tentativo WebM che blocca iOS
-    const srcMp4  = document.createElement('source');
-    srcMp4.src    = src;
-    srcMp4.type   = 'video/mp4';
-    v.appendChild(srcMp4);
+    const source = document.createElement('source');
+    source.src   = src;
+    source.type  = 'video/mp4';
+    v.appendChild(source);
 
     v.addEventListener('canplay', () => {
       v.style.opacity = '0.35';
       v.play().catch(() => {});
-    });
+    }, { once: true });
 
-    v.addEventListener('ended', () => {
-      current = (current + 1) % videos.length;
-      container.innerHTML = '';
-      const next = createVideo(videos[current]);
-      container.appendChild(next);
-      next.play().catch(() => {});
-    });
+    if (!useLoop) {
+      v.addEventListener('ended', () => {
+        current = (current + 1) % videos.length;
+        container.innerHTML = '';
+        const next = createVideo(videos[current], false);
+        container.appendChild(next);
+        next.play().catch(() => {});
+      });
+    }
 
     return v;
   }
 
-  // Monta il primo video
-  const first = createVideo(videos[0]);
+  const first = createVideo(videos[0], isIOS);
   container.appendChild(first);
   first.play().catch(() => {});
 
-  // iOS Safari/Chrome: al primo tocco forza il play se il video e fermo
-  let unlocked = false;
   function unlockOnTouch() {
-    if (unlocked) return;
-    unlocked = true;
     const active = container.querySelector('video');
     if (active && active.paused) active.play().catch(() => {});
     ['touchstart', 'click'].forEach(e => document.removeEventListener(e, unlockOnTouch));
@@ -129,7 +123,6 @@ function buildVideo(CONFIG) {
     document.addEventListener(e, unlockOnTouch, { passive: true });
   });
 
-  // Riprende se la pagina torna in foreground
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
       const active = container.querySelector('video');
@@ -137,7 +130,6 @@ function buildVideo(CONFIG) {
     }
   });
 }
-
 
 /* ============================================================
    HERO — PROSSIMO EVENTO & COUNTDOWN
