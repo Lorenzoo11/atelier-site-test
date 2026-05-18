@@ -89,10 +89,11 @@
     </div>
     <div class="contatti-inner">
       <div class="contatti-info reveal" id="contatti-info"></div>
-      <form class="contact-form reveal" id="contact-form" name="contatti" data-netlify="true" onsubmit="handleForm(event)">
-        <input type="text"  placeholder="Nome"     required/>
-        <input type="email" placeholder="Email"    required/>
-        <textarea rows="5"  placeholder="Messaggio"></textarea>
+      <form class="contact-form reveal" id="contact-form" name="contatti" method="POST" data-netlify="true" onsubmit="handleForm(event)">
+        <input type="hidden" name="form-name" value="contatti" />
+        <input type="text"  name="nome"     placeholder="Nome"     required/>
+        <input type="email" name="email"    placeholder="Email"    required/>
+        <textarea           name="messaggio" rows="5" placeholder="Messaggio"></textarea>
         <button type="submit">Invia messaggio</button>
         <p id="form-msg" style="font-size:0.8rem;display:none;"></p>
       </form>

@@ -403,30 +403,30 @@ function handleForm(e) {
   e.preventDefault();
   const form = e.target;
   const msg  = document.getElementById('form-msg');
-  const btn  = form.querySelector('button[type="submit"]');
+  const btn  = form.querySelector("button[type='submit']");
 
   btn.disabled    = true;
-  btn.textContent = 'Invio in corso...';
-  msg.style.display = 'none';
+  btn.textContent = "Invio in corso...";
+  msg.style.display = "none";
 
-  fetch('/', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  fetch("/", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams(new FormData(form)).toString()
   })
   .then(() => {
-    msg.style.display = 'block';
-    msg.style.color   = 'var(--red)';
-    msg.textContent   = 'Messaggio inviato! Ti risponderemo presto.';
+    msg.style.display = "block";
+    msg.style.color   = "var(--red)";
+    msg.textContent   = "Messaggio inviato! Ti risponderemo presto.";
     form.reset();
     btn.disabled    = false;
-    btn.textContent = 'Invia messaggio';
+    btn.textContent = "Invia messaggio";
   })
   .catch(() => {
-    msg.style.display = 'block';
-    msg.style.color   = 'var(--muted)';
-    msg.textContent   = "Errore nell invio. Scrivici direttamente via email.";
+    msg.style.display = "block";
+    msg.style.color   = "var(--muted)";
+    msg.textContent   = "Errore di rete. Scrivici direttamente via email.";
     btn.disabled    = false;
-    btn.textContent = 'Invia messaggio';
+    btn.textContent = "Invia messaggio";
   });
 }
